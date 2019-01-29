@@ -11,11 +11,11 @@ cd /ops
 
 CONFIGDIR=/ops/config
 
-CONSULDOWNLOAD=$(python get_enterprise_url.py consul amd64 linux)
+CONSULDOWNLOAD=$(python /ops/scripts/get_enterprise_url.py consul amd64 linux)
 CONSULCONFIGDIR=/etc/consul.d
 CONSULDIR=/opt/consul
 
-VAULTDOWNLOAD=$(python get_enterprise_url.py vault amd64 linux)
+VAULTDOWNLOAD=$(python /ops/scripts/get_enterprise_url.py vault amd64 linux)
 VAULTCONFIGDIR=/etc/vault.d
 VAULTDIR=/opt/vault
 
