@@ -20,7 +20,7 @@
     "ssh_username": "packer",
     "managed_image_name": "cvstack",
     "azure_tags": {
-      "Product": "Hashistack"
+      "Product": "CVStack"
     }
   }],
   "provisioners":  [
@@ -35,6 +35,16 @@
     "type": "file",
     "source": "shared",
     "destination": "/ops"
+  },
+  {
+    "type": "file",
+    "source": "shared/scripts",
+    "destination": "/ops/scripts"
+  },
+  {
+    "type": "file",
+    "source": "shared/config",
+    "destination": "/ops/config"
   },
   {
     "type": "shell",
