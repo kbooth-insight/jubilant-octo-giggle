@@ -14,6 +14,10 @@ variable "location" {
   default     = "East US"
 }
 
+variable "image_id" {
+  description = "The Image ID to use for the base VM for both Consul and Vault."
+}
+
 variable "consul_count" {
   description = "The number of Consul nodes to deploy."
   default = "3"
@@ -24,8 +28,14 @@ variable "vault_count" {
   default = "3"
 }
 
-variable "pubkey" {
-  description = "The public key to deploy to servers for SSH access."
+variable "consul_machine_size" {
+  description = "The machine size to use for Consul."
+  default = "Standard_DS1_v2"
+}
+
+variable "vault_machine_size" {
+  description = "The machine size to use for Vault."
+  default = "Standard_DS1_v2"
 }
 
 resource "tls_private_key" "main" {
@@ -38,7 +48,7 @@ resource "null_resource" "main" {
   }
 
   provisioner "local-exec" {
-    command = "chmod 600 azure-hashistack.pem"
+    command = "chmod 600 azure-cvstack.pem"
   }
 }
 
@@ -95,6 +105,22 @@ resource "azurerm_network_security_group" "cvstackpubnsg" {
 }
 
 resource "azurerm_network_interface" "cvstackpublicnic" {
+    name                      = "bastionNIC"
+    location = "${var.location}"
+    resource_group_name       = "${azurerm_resource_group.cvstackgroup.name}"
+    network_security_group_id = "${azurerm_network_security_group.cvstacknsg.id}"
+
+    ip_configuration {
+        name                          = "bastionNicConfiguration"
+        subnet_id                     = "${azurerm_subnet.cvstacksubnet.id}"
+        private_ip_address_allocation = "dynamic"
+        public_ip_address_id          = "${azurerm_public_ip.cvstackpublicip.id}"
+    }
+
+    tags = "${local.common_tags}"
+}
+
+resource "azurerm_network_interface" "cvstackpublicnic" {
     name                      = "cvNIC${count.index}"
     location = "${var.location}"
     resource_group_name       = "${azurerm_resource_group.cvstackgroup.name}"
@@ -132,6 +158,7 @@ resource "azurerm_virtual_machine" "cvstackbastion" {
     name                  = "bastionbox"
     location              = "${var.location}"
     resource_group_name   = "${azurerm_resource_group.cvstackgroup.name}"
+    // Bastion node will have a public IP
     network_interface_ids = ["${azurerm_network_interface.cvstackpublicnic.id}"]
     vm_size               = "Standard_DS1_v2"
 
@@ -175,8 +202,9 @@ resource "azurerm_virtual_machine" "cvstackconsulnode" {
     name                  = "consulbox${count.index}"
     location              = "${var.location}"
     resource_group_name   = "${azurerm_resource_group.cvstackgroup.name}"
+    // Vault and Consul nodes only have NICs on the private subnet
     network_interface_ids = ["${azurerm_network_interface.cvstackpublicnic.id}"]
-    vm_size               = "Standard_DS1_v2"
+    vm_size               = "${var.consul_machine_size}"
     count = "${var.consul_count}"
 
     storage_os_disk {
@@ -187,10 +215,7 @@ resource "azurerm_virtual_machine" "cvstackconsulnode" {
     }
 
     storage_image_reference {
-        publisher = "Canonical"
-        offer     = "UbuntuServer"
-        sku       = "16.04.0-LTS"
-        version   = "latest"
+      id = "${var.image_id}"
     }
 
     os_profile {
@@ -219,8 +244,9 @@ resource "azurerm_virtual_machine" "cvstackvaultnode" {
     name                  = "vaultbox${count.index}"
     location              = "${var.location}"
     resource_group_name   = "${azurerm_resource_group.cvstackgroup.name}"
+    // Vault and Consul nodes only have NICs on the private subnet
     network_interface_ids = ["${azurerm_network_interface.cvstackpublicnic.id}"]
-    vm_size               = "Standard_DS1_v2"
+    vm_size               = "${var.vault_machine_size}"
     count = "${var.consul_count}"
 
     storage_os_disk {
@@ -231,10 +257,7 @@ resource "azurerm_virtual_machine" "cvstackvaultnode" {
     }
 
     storage_image_reference {
-        publisher = "Canonical"
-        offer     = "UbuntuServer"
-        sku       = "16.04.0-LTS"
-        version   = "latest"
+      id = "${var.image_id}"
     }
 
     os_profile {
