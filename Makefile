@@ -1,9 +1,9 @@
 
 build :
 	@./build.sh
-	@terraform init
 
-plan :
+prepare :
+	@terraform init
 	@terraform plan \
 		-lock=true \
 		-input=false \
