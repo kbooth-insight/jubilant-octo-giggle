@@ -1,4 +1,6 @@
-# Consul Enterprise + Vault Enterprise Cluster in Microsoft Azure
+# WORK IN PROGRESS
+
+## Consul Enterprise + Vault Enterprise Cluster in Microsoft Azure
 
 ### Setup
 Set the following environment variables:

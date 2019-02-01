@@ -5,7 +5,7 @@ variable "prefix" {
 
 locals {
   common_tags = {
-    environment = "cvstack-${var.prefix}"
+    environment = "${var.prefix}-cvstack"
     DoNotDelete = "yes"
   }
 }
