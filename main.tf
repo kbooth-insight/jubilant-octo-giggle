@@ -1,5 +1,6 @@
 variable "prefix" {
   description = "Unique affix to avoid resource duplication."
+  default = "hashi"
 }
 
 locals {
@@ -108,26 +109,10 @@ resource "azurerm_network_interface" "cvstackpublicnic" {
     name                      = "bastionNIC"
     location = "${var.location}"
     resource_group_name       = "${azurerm_resource_group.cvstackgroup.name}"
-    network_security_group_id = "${azurerm_network_security_group.cvstacknsg.id}"
+    network_security_group_id = "${azurerm_network_security_group.cvstackpubnsg.id}"
 
     ip_configuration {
         name                          = "bastionNicConfiguration"
-        subnet_id                     = "${azurerm_subnet.cvstacksubnet.id}"
-        private_ip_address_allocation = "dynamic"
-        public_ip_address_id          = "${azurerm_public_ip.cvstackpublicip.id}"
-    }
-
-    tags = "${local.common_tags}"
-}
-
-resource "azurerm_network_interface" "cvstackpublicnic" {
-    name                      = "cvNIC${count.index}"
-    location = "${var.location}"
-    resource_group_name       = "${azurerm_resource_group.cvstackgroup.name}"
-    network_security_group_id = "${azurerm_network_security_group.cvstacknsg.id}"
-
-    ip_configuration {
-        name                          = "myNicConfiguration"
         subnet_id                     = "${azurerm_subnet.cvstacksubnet.id}"
         private_ip_address_allocation = "dynamic"
         public_ip_address_id          = "${azurerm_public_ip.cvstackpublicip.id}"
@@ -192,7 +177,7 @@ resource "azurerm_virtual_machine" "cvstackbastion" {
 
     boot_diagnostics {
         enabled = "true"
-        storage_uri = "${azurerm_storage_account.mystorageaccount.primary_blob_endpoint}"
+        storage_uri = "${azurerm_storage_account.cvstacksa.primary_blob_endpoint}"
     }
 
     tags = "${local.common_tags}"
@@ -234,7 +219,7 @@ resource "azurerm_virtual_machine" "cvstackconsulnode" {
 
     boot_diagnostics {
         enabled = "true"
-        storage_uri = "${azurerm_storage_account.mystorageaccount.primary_blob_endpoint}"
+        storage_uri = "${azurerm_storage_account.cvstacksa.primary_blob_endpoint}"
     }
 
     tags = "${local.common_tags}"
@@ -276,7 +261,7 @@ resource "azurerm_virtual_machine" "cvstackvaultnode" {
 
     boot_diagnostics {
         enabled = "true"
-        storage_uri = "${azurerm_storage_account.mystorageaccount.primary_blob_endpoint}"
+        storage_uri = "${azurerm_storage_account.cvstacksa.primary_blob_endpoint}"
     }
 
     tags = "${local.common_tags}"

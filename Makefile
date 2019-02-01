@@ -1,6 +1,7 @@
 
 build :
 	@./build.sh
+	@terraform init
 
 plan :
 	@terraform plan \
