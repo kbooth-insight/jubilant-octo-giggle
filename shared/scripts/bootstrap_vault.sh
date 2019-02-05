@@ -20,31 +20,9 @@ cd /ops
 
 CONFIGDIR=/ops/config
 
-CONSULDOWNLOAD=$(python scripts/get_enterprise_url.py -p consul)
-CONSULCONFIGDIR=/etc/consul.d
-CONSULDIR=/opt/consul
-
 VAULTDOWNLOAD=$(python scripts/get_enterprise_url.py -p vault)
 VAULTCONFIGDIR=/etc/vault.d
 VAULTDIR=/opt/vault
-
-##########
-# Consul #
-##########
-
-## Download
-curl -L $CONSULDOWNLOAD > consul.zip
-
-## Install
-sudo unzip consul.zip -d /usr/local/bin
-sudo chmod 0755 /usr/local/bin/consul
-sudo chown root:root /usr/local/bin/consul
-
-## Manage directories and permissions
-sudo mkdir -p $CONSULCONFIGDIR
-sudo chmod 755 $CONSULCONFIGDIR
-sudo mkdir -p $CONSULDIR
-sudo chmod 755 $CONSULDIR
 
 #########
 # Vault #

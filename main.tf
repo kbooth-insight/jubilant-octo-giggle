@@ -1,44 +1,3 @@
-variable "prefix" {
-  description = "Unique affix to avoid resource duplication."
-  default = "hashi"
-}
-
-locals {
-  common_tags = {
-    environment = "${var.prefix}-cvstack"
-    DoNotDelete = "yes"
-  }
-}
-
-variable "location" {
-  description = "The Azure location to which to deploy."
-  default     = "East US"
-}
-
-variable "image_id" {
-  description = "The Image ID to use for the base VM for both Consul and Vault."
-}
-
-variable "consul_count" {
-  description = "The number of Consul nodes to deploy."
-  default = "3"
-}
-
-variable "vault_count" {
-  description = "The number of Vault nodes to deploy."
-  default = "3"
-}
-
-variable "consul_machine_size" {
-  description = "The machine size to use for Consul."
-  default = "Standard_DS1_v2"
-}
-
-variable "vault_machine_size" {
-  description = "The machine size to use for Vault."
-  default = "Standard_DS1_v2"
-}
-
 resource "tls_private_key" "main" {
   algorithm = "RSA"
 }
@@ -200,7 +159,7 @@ resource "azurerm_virtual_machine" "cvstackconsulnode" {
     }
 
     storage_image_reference {
-      id = "${var.image_id}"
+      id = "${var.consul_image_id}"
     }
 
     os_profile {
@@ -235,14 +194,14 @@ resource "azurerm_virtual_machine" "cvstackvaultnode" {
     count = "${var.consul_count}"
 
     storage_os_disk {
-        name              = "cvstackdisk${count.index}"
+        name              = "cvstackvaultdisk${count.index}"
         caching           = "ReadWrite"
         create_option     = "FromImage"
         managed_disk_type = "Premium_LRS"
     }
 
     storage_image_reference {
-      id = "${var.image_id}"
+      id = "${var.vault_image_id}"
     }
 
     os_profile {
