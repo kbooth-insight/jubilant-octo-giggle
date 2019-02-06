@@ -20,7 +20,7 @@ resource "azurerm_resource_group" "cvstackgroup" {
 }
 
 resource "azurerm_virtual_network" "cvstacknetwork" {
-    name                = "myVnet"
+    name                = "cvstack-net"
     address_space       = ["10.0.0.0/16"]
     location = "${var.location}"
     resource_group_name = "${azurerm_resource_group.cvstackgroup.name}"
@@ -29,7 +29,7 @@ resource "azurerm_virtual_network" "cvstacknetwork" {
 }
 
 resource "azurerm_subnet" "cvstacksubnet" {
-    name                 = "mySubnet"
+    name                 = "cvstack-default-subnet"
     resource_group_name  = "${azurerm_resource_group.cvstackgroup.name}"
     virtual_network_name = "${azurerm_virtual_network.cvstacknetwork.name}"
     address_prefix       = "10.0.1.0/24"
@@ -75,6 +75,38 @@ resource "azurerm_network_interface" "cvstackpublicnic" {
         subnet_id                     = "${azurerm_subnet.cvstacksubnet.id}"
         private_ip_address_allocation = "dynamic"
         public_ip_address_id          = "${azurerm_public_ip.cvstackpublicip.id}"
+    }
+
+    tags = "${local.common_tags}"
+}
+
+resource "azurerm_network_interface" "consul_nics" {
+    name                      = "consul-nic${count.index}"
+    location = "${var.location}"
+    resource_group_name       = "${azurerm_resource_group.cvstackgroup.name}"
+    network_security_group_id = "${azurerm_network_security_group.cvstackpubnsg.id}"
+    count = "${var.consul_count}"
+
+    ip_configuration {
+        name                          = "counsul-nic${count.index}"
+        subnet_id                     = "${azurerm_subnet.cvstacksubnet.id}"
+        private_ip_address_allocation = "dynamic"
+    }
+
+    tags = "${local.common_tags}"
+}
+
+resource "azurerm_network_interface" "vault_nics" {
+    name                      = "vault-nic${count.index}"
+    location = "${var.location}"
+    resource_group_name       = "${azurerm_resource_group.cvstackgroup.name}"
+    network_security_group_id = "${azurerm_network_security_group.cvstackpubnsg.id}"
+    count = "${var.consul_count}"
+
+    ip_configuration {
+        name                          = "vault-nic${count.index}"
+        subnet_id                     = "${azurerm_subnet.cvstacksubnet.id}"
+        private_ip_address_allocation = "dynamic"
     }
 
     tags = "${local.common_tags}"
@@ -129,7 +161,7 @@ resource "azurerm_virtual_machine" "cvstackbastion" {
       disable_password_authentication = true
 
       ssh_keys {
-        path     = "/home/ubuntu/.ssh/authorized_keys"
+        path     = "/home/cvstackadmin/.ssh/authorized_keys"
         key_data = "${tls_private_key.main.public_key_openssh}"
       }
     }
@@ -147,7 +179,7 @@ resource "azurerm_virtual_machine" "cvstackconsulnode" {
     location              = "${var.location}"
     resource_group_name   = "${azurerm_resource_group.cvstackgroup.name}"
     // Vault and Consul nodes only have NICs on the private subnet
-    network_interface_ids = ["${azurerm_network_interface.cvstackpublicnic.id}"]
+    network_interface_ids = ["${element(azurerm_network_interface.consul_nics.*.id, count.index)}"]
     vm_size               = "${var.consul_machine_size}"
     count = "${var.consul_count}"
 
@@ -171,7 +203,7 @@ resource "azurerm_virtual_machine" "cvstackconsulnode" {
       disable_password_authentication = true
 
       ssh_keys {
-        path     = "/home/ubuntu/.ssh/authorized_keys"
+        path     = "/home/cvstackadmin/.ssh/authorized_keys"
         key_data = "${tls_private_key.main.public_key_openssh}"
       }
     }
@@ -189,7 +221,7 @@ resource "azurerm_virtual_machine" "cvstackvaultnode" {
     location              = "${var.location}"
     resource_group_name   = "${azurerm_resource_group.cvstackgroup.name}"
     // Vault and Consul nodes only have NICs on the private subnet
-    network_interface_ids = ["${azurerm_network_interface.cvstackpublicnic.id}"]
+    network_interface_ids = ["${element(azurerm_network_interface.vault_nics.*.id, count.index)}"]
     vm_size               = "${var.vault_machine_size}"
     count = "${var.consul_count}"
 
@@ -213,7 +245,7 @@ resource "azurerm_virtual_machine" "cvstackvaultnode" {
       disable_password_authentication = true
 
       ssh_keys {
-        path     = "/home/ubuntu/.ssh/authorized_keys"
+        path     = "/home/cvstackadmin/.ssh/authorized_keys"
         key_data = "${tls_private_key.main.public_key_openssh}"
       }
     }
@@ -228,4 +260,8 @@ resource "azurerm_virtual_machine" "cvstackvaultnode" {
 
 output "pubip" {
   value = "${azurerm_public_ip.cvstackpublicip.ip_address}"
+}
+
+output "private_key" {
+  value = "${tls_private_key.main.private_key_openssh}"
 }

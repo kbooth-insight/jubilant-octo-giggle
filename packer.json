@@ -19,7 +19,7 @@
     "image_sku": "16.04-LTS",
     "os_type": "Linux",
     "ssh_username": "packer",
-    "managed_image_name": "cvstack",
+    "managed_image_name": "{{ user `hashi_product` }}-image",
     "azure_tags": {
       "Product": "CVStack"
     }
