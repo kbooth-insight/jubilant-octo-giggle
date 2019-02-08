@@ -10,3 +10,4 @@ credentials
 secrets/
 scratch.md
 *.pyc
+*.retry

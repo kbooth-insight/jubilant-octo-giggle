@@ -10,9 +10,13 @@ ARM_SUBSCRIPTION_ID
 ARM_TENANT_ID
 ARM_CLIENT_ID
 ARM_CLIENT_SECRET
+
+AZURE_RESOURCE_GROUP
 ```
 
 Install the Azure CLI tools. They are available in most popular package managers. `brew install azure-cli`, `apt install azure-cli`, etc.
+
+Install ansible locally (`brew install ansible`).
 
 Login to Azure CLI (`az login`).
 
@@ -21,3 +25,4 @@ Run `make build` to build a machine image with Packer in Azure. Or, to build the
 Run `make prepare` to download dependencies and see what Terraform thinks it needs to do.
 
 Run `make deploy` to start spending money.
+
