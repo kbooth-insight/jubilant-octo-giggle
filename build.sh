@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 set -e
 
-AZURE_RESOURCE_GROUP=${AZURE_RESOURCE_GROUP:-"rg-kb-cvstack"}
+AZURE_RESOURCE_GROUP=${AZURE_RESOURCE_GROUP:-"cvstack"}
 AZURE_LOATION=${AZURE_LOCATION:-"East US"}
 
 if [ ! $(az group exists --name ${AZURE_RESOURCE_GROUP}) ]
