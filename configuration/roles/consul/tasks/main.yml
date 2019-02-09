@@ -1,0 +1,67 @@
+---
+- name: Get latest consul binary location
+  local_action: command python ../shared/scripts/get_enterprise_url.py -p consul
+  become: no
+  register: latest_consul
+- name: Download consul
+  get_url:
+    url: "{{latest_consul.stdout}}"
+    dest: /tmp/consul.zip
+
+- name: Unzip consul and put in path
+  unarchive:
+    src: /tmp/consul.zip
+    dest: "{{install_dir}}"
+    mode: +x
+    remote_src: yes
+    # force: yes
+- name: chown to root
+  file:
+    path: "{{install_dir}}/consul"
+    owner: "{{install_owner}}"
+    group: "{{install_group}}"
+
+# debug
+- name: Check if Consul is present
+  command: "{{install_dir}}/consul -v"
+  register: consul_v
+- name: Print
+  debug:
+    var: consul_v.stdout
+
+# configure systemd and consul config
+- name: Create config directory
+  file:
+    path: "{{consul_config_dir}}"
+    state: directory
+# TODO: is this consul user needed?
+- name: Add the user 'consul'
+  user:
+    name: consul
+    comment: Create a unique non privileged system user to run Consul
+    system: yes
+    home: "{{consul_config_dir}}"
+    shell: /bin/false
+- name: Create consul server systemd service file 
+  template:
+    src: consul-server.service.j2
+    dest: "{{systemd_dir}}/consul-server.service"
+- name: Create consul config 
+  template:
+    src: consul-server.hcl.j2
+    dest: "{{consul_config_dir}}/consul.hcl"
+    mode: 0640
+- name: Enable and start consul server service
+  systemd:
+    name: consul-server.service
+    state: stopped
+    enabled: no
+
+# - name: Common Configuration for consul
+#   include: common.yml
+# - name: Configure Consul as Server
+#   include: server.yml
+#   when: consul_type == 'server'
+# - name: Configure Consul as Client
+#   include: client.yml
+#   when: consul_type == 'client'

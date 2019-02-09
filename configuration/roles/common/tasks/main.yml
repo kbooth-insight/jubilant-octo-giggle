@@ -1,0 +1,53 @@
+---
+# apt installs and updates
+- name: Ensure aptitude is installed
+  apt:
+    name: aptitude
+- name: Update and upgrade apt packages
+  apt:
+    upgrade: yes
+    update_cache: yes
+- name: Install dependencies
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - software-properties-common
+    - unzip
+    - tree
+    - redis-tools
+    - jq
+    - curl
+    - tmux
+    - python-pip
+
+# Firewall
+- name: Disable UFW
+  ufw:
+    state: disabled
+
+# TLS
+- name: Create key directory
+  file:
+    path: "{{ssl_key_dir}}"
+    state: directory
+    mode: 0755
+- name: Create cert directory
+  file:
+    path: "{{ssl_cert_dir}}"
+    state: directory
+
+
+
+# - name: Copy ssl server.key
+#   copy:
+#     src: secrets/server.key
+#     dest: "{{ssl_key_dir}}/server.key"
+
+# - name: Copy ssl server.crt
+#   copy:
+#     src: secrets/server.crt
+#     dest: "{{ssl_cert_dir}}/server.crt"
+#     mode: 0644
+# - name: Update cert index
+#   shell: /usr/sbin/update-ca-certificates

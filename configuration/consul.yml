@@ -1,0 +1,7 @@
+---
+- name: consul.yml @common
+  hosts: all
+  become: yes
+  roles:
+    - common
+    - { role: consul, consul_type: 'server' }

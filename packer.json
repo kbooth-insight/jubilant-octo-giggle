@@ -19,7 +19,7 @@
       "image_sku": "16.04-LTS",
       "os_type": "Linux",
       "ssh_username": "packer",
-      "managed_image_name": "cvstack-ansible-{{ user `hashi_product` }}",
+      "managed_image_name": "cvstack-ansible-{{ user `hashi_product` }}v0.1",
       "azure_tags": {
         "Product": "CVStack"
       }
@@ -28,7 +28,17 @@
   "provisioners": [
     {
       "type": "ansible",
-      "playbook_file": "./playbook.yml"
+      "playbook_file": "./configuration/{{ user `hashi_product` }}.yml"
+    },
+    {
+      "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
+      "inline": [
+        "apt-get update -qq -y",
+        "apt-get upgrade -qq -y",
+        "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"
+      ],
+      "inline_shebang": "/bin/sh -x",
+      "type": "shell"
     }
   ]
 }
