@@ -5,7 +5,8 @@
   tasks:
   - name: Common tasks
     include: common.yml
-  
+
+  # Get Consul
   - name: Get latest consul binary location
     local_action: command python ./get_enterprise_url.py -p consul
     become: no
@@ -20,13 +21,10 @@
       src: /tmp/consul.zip
       dest: "{{install_dir}}"
       mode: +x
-      remote_src: yes
-      # force: yes
-  - name: chown to root
-    file:
-      path: "{{install_dir}}/consul"
       owner: "{{install_owner}}"
       group: "{{install_group}}"
+      remote_src: yes
+      # force: yes
 
   # debug
   - name: Check if Consul is present

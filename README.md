@@ -12,6 +12,7 @@ ARM_CLIENT_ID
 ARM_CLIENT_SECRET
 
 AZURE_RESOURCE_GROUP
+AZURE_LOCATION
 ```
 
 Install the Azure CLI tools. They are available in most popular package managers. `brew install azure-cli`, `apt install azure-cli`, etc.

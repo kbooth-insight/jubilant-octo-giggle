@@ -6,6 +6,7 @@
   - name: Common tasks
     include: common.yml
   
+  # Get Vault
   - name: Get latest vault binary location
     local_action: command python ./get_enterprise_url.py -p vault
     become: no
@@ -14,19 +15,35 @@
     get_url:
       url: "{{latest_vault.stdout}}"
       dest: /tmp/vault.zip
-
   - name: Unzip vault and put in path
     unarchive:
       src: /tmp/vault.zip
       dest: "{{install_dir}}"
-      mode: +x
-      remote_src: yes
-      # force: yes
-  - name: chown to root
-    file:
-      path: "{{install_dir}}/vault"
+      mode: +x      
       owner: "{{install_owner}}"
       group: "{{install_group}}"
+      remote_src: yes
+      # force: yes
+
+  # Get Consul
+  - name: Get latest consul binary location
+    local_action: command python ./get_enterprise_url.py -p consul
+    become: no
+    register: latest_consul
+  - name: Download consul
+    get_url:
+      url: "{{latest_consul.stdout}}"
+      dest: /tmp/consul.zip
+
+  - name: Unzip consul and put in path
+    unarchive:
+      src: /tmp/consul.zip
+      dest: "{{install_dir}}"
+      mode: +x
+      owner: "{{install_owner}}"
+      group: "{{install_group}}"
+      remote_src: yes
+      # force: yes
 
   # debug
   - name: Check if vault is present
@@ -35,3 +52,36 @@
   - name: Print
     debug:
       var: vault_v.stdout
+  - name: Check if Consul is present
+    command: "{{install_dir}}/consul -v"
+    register: consul_v
+  - name: Print
+    debug:
+      var: consul_v.stdout
+
+  # configure systemd and vault config
+  - name: Create config directory
+    file:
+      path: "{{vault_config_dir}}"
+      state: directory
+  - name: Add the user 'vault'
+    user:
+      name: vault
+      comment: Create a unique non privileged system user to run vault
+      system: yes
+      home: "{{vault_config_dir}}"
+      shell: /bin/false
+  - name: Create vault server systemd service file 
+    template:
+      src: vault.service.j2
+      dest: "{{systemd_dir}}/vault.service"
+  - name: Create vault config 
+    template:
+      src: vault.hcl.j2
+      dest: "{{vault_config_dir}}/vault.hcl"
+      mode: 0640
+  - name: Check on vault server service
+    systemd:
+      name: vault.service
+      state: stopped
+      enabled: no

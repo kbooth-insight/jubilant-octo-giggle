@@ -2,7 +2,8 @@ variable "prefix" {
   description = "Unique affix to avoid resource duplication."
   default     = "hashi"
 }
-variable "resource_group_name"{}
+
+variable "resource_group_name" {}
 
 locals {
   common_tags = {

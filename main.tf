@@ -218,56 +218,56 @@ resource "azurerm_network_interface" "cvstackvaultnic" {
   tags = "${local.common_tags}"
 }
 
-# resource "azurerm_virtual_machine" "cvstackvaultnode" {
-#   name                = "vaultbox${count.index}"
-#   location            = "${var.location}"
-#   resource_group_name = "${azurerm_resource_group.cvstackgroup.name}"
+resource "azurerm_virtual_machine" "cvstackvaultnode" {
+  name                = "vaultbox${count.index}"
+  location            = "${var.location}"
+  resource_group_name = "${azurerm_resource_group.cvstackgroup.name}"
 
-#   // Vault and Consul nodes only have NICs on the private subnet
-#   network_interface_ids = ["${element(azurerm_network_interface.cvstackvaultnic.*.id, count.index)}"]
-#   vm_size               = "${var.vault_machine_size}"
-#   count                 = "${var.consul_count}"
+  // Vault and Consul nodes only have NICs on the private subnet
+  network_interface_ids = ["${element(azurerm_network_interface.cvstackvaultnic.*.id, count.index)}"]
+  vm_size               = "${var.vault_machine_size}"
+  count                 = "${var.consul_count}"
 
-#   storage_os_disk {
-#     name              = "cvstackvaultdisk${count.index}"
-#     caching           = "ReadWrite"
-#     create_option     = "FromImage"
-#     managed_disk_type = "Premium_LRS"
-#   }
+  storage_os_disk {
+    name              = "cvstackvaultdisk${count.index}"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Premium_LRS"
+  }
 
-#   storage_image_reference {
-#     id = "${var.vault_image_id}"
-#   }
+  storage_image_reference {
+    id = "${var.vault_image_id}"
+  }
 
-#   os_profile {
-#     computer_name  = "cvstack-consul${count.index}"
-#     admin_username = "cvstackadmin"
-#   }
+  os_profile {
+    computer_name  = "cvstack-consul${count.index}"
+    admin_username = "cvstackadmin"
+  }
 
-#   os_profile_linux_config {
-#     disable_password_authentication = true
+  os_profile_linux_config {
+    disable_password_authentication = true
 
-#     ssh_keys {
-#       path     = "/home/cvstackadmin/.ssh/authorized_keys"
-#       key_data = "${tls_private_key.main.public_key_openssh}"
-#     }
-#   }
+    ssh_keys {
+      path     = "/home/cvstackadmin/.ssh/authorized_keys"
+      key_data = "${tls_private_key.main.public_key_openssh}"
+    }
+  }
 
-#   boot_diagnostics {
-#     enabled     = "true"
-#     storage_uri = "${azurerm_storage_account.cvstacksa.primary_blob_endpoint}"
-#   }
+  boot_diagnostics {
+    enabled     = "true"
+    storage_uri = "${azurerm_storage_account.cvstacksa.primary_blob_endpoint}"
+  }
 
-#   tags = "${local.common_tags}"
-# }
+  tags = "${local.common_tags}"
+}
 
 output "consul-private-ip" {
   value = "${azurerm_network_interface.cvstackconsulnic.*.private_ip_address}"
 }
 
-# output "vault-private-ip" {
-#   value = "${azurerm_network_interface.cvstackvaultnic.*.private_ip_address}"
-# }
+output "vault-private-ip" {
+  value = "${azurerm_network_interface.cvstackvaultnic.*.private_ip_address}"
+}
 
 output "jump-public-ip" {
   value = "${azurerm_public_ip.cvstackpublicip.ip_address}"
