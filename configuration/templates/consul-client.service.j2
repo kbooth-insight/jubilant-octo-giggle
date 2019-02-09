@@ -9,19 +9,19 @@
 ### END INIT INFO
 
 [Unit]
-Description="HashiCorp Consul Server - A service mesh solution"
+Description="HashiCorp Consul Client - A service mesh solution"
 Documentation=https://www.consul.io/
 Requires=network-online.target
 After=network-online.target
 ConditionFileNotEmpty={{consul_config_dir}}/consul.hcl
 
 [Service]
-User=root
-Group=root
+User=consul
+Group=consul
 PIDFile=/var/run/consul/consul.pid
 PermissionsStartOnly=true
 ExecStartPre=-/bin/mkdir -p /var/run/consul
-ExecStartPre=/bin/chown -R root:root /var/run/consul
+ExecStartPre=/bin/chown -R consul:consul /var/run/consul
 ExecStart=/usr/local/bin/consul agent \
     -config-file={{consul_config_dir}}/consul.hcl \
     -pid-file=/var/run/consul/consul.pid

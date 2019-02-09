@@ -1,0 +1,37 @@
+---
+- name: vault.yml @common
+  hosts: all
+  become: yes
+  tasks:
+  - name: Common tasks
+    include: common.yml
+  
+  - name: Get latest vault binary location
+    local_action: command python ./get_enterprise_url.py -p vault
+    become: no
+    register: latest_vault
+  - name: Download vault
+    get_url:
+      url: "{{latest_vault.stdout}}"
+      dest: /tmp/vault.zip
+
+  - name: Unzip vault and put in path
+    unarchive:
+      src: /tmp/vault.zip
+      dest: "{{install_dir}}"
+      mode: +x
+      remote_src: yes
+      # force: yes
+  - name: chown to root
+    file:
+      path: "{{install_dir}}/vault"
+      owner: "{{install_owner}}"
+      group: "{{install_group}}"
+
+  # debug
+  - name: Check if vault is present
+    command: "{{install_dir}}/vault -v"
+    register: vault_v
+  - name: Print
+    debug:
+      var: vault_v.stdout
