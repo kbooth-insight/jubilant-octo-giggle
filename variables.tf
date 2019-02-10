@@ -3,6 +3,8 @@ variable "prefix" {
   default     = "hashi"
 }
 
+variable "resource_group_name" {}
+
 locals {
   common_tags = {
     environment = "${var.prefix}-cvstack"

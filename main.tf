@@ -171,7 +171,6 @@ resource "azurerm_virtual_machine" "cvstackbastion" {
     enabled     = "true"
     storage_uri = "${azurerm_storage_account.cvstacksa.primary_blob_endpoint}"
   }
-
   tags = "${local.common_tags}"
 }
 
@@ -214,7 +213,6 @@ resource "azurerm_virtual_machine" "cvstackconsulnode" {
     enabled     = "true"
     storage_uri = "${azurerm_storage_account.cvstacksa.primary_blob_endpoint}"
   }
-
   tags = "${local.common_tags}"
 }
 
@@ -261,7 +259,7 @@ resource "azurerm_virtual_machine" "cvstackvaultnode" {
   tags = "${local.common_tags}"
 }
 
-output "pubip" {
+output "jump-public-ip" {
   value = "${azurerm_public_ip.cvstackpublicip.ip_address}"
 }
 
