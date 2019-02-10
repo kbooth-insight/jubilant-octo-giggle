@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-az group create --name cvstack --location "East US"
+az group create --name ${AZURE_RESOURCE_GROUP} --location ${AZURE_LOCATION}
 echo "Created resource group"
 echo "Building Consul image with Packer. This will take several minutes."
 export TF_VAR_consul_image_id=$(HASHI_PRODUCT=consul packer build -force packer.json | grep "ManagedImageId" | sed 's/.* //g')

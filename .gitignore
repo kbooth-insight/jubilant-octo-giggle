@@ -10,3 +10,5 @@ credentials
 secrets/
 scratch.md
 *.pyc
+*.retry
+.DS_Store

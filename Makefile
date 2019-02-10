@@ -10,7 +10,7 @@ prepare :
 		-refresh=true \
 		-var-file="terraform.tfvars"
 
-deploy : prepare
+deploy :
 	@terraform apply \
 		-lock=true \
 		-input=false \
