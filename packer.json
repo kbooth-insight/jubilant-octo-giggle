@@ -7,22 +7,21 @@
     "hashi_product": "{{ env `HASHI_PRODUCT` }}"
   },
   "builders": [
-    {
-      "type": "azure-arm",
-      "client_id": "{{ user `azure_client_id` }}",
-      "client_secret": "{{ user `azure_client_secret` }}",
-      "subscription_id": "{{ user `azure_subscription_id` }}",
-      "managed_image_resource_group_name": "{{ user `azure_resource_group` }}",
-      "location": "East US",
-      "image_publisher": "Canonical",
-      "image_offer": "UbuntuServer",
-      "image_sku": "16.04-LTS",
-      "os_type": "Linux",
-      "ssh_username": "packer",
-      "managed_image_name": "cvstack-ansible-{{ user `hashi_product` }}v0.1",
-      "azure_tags": {
-        "Product": "CVStack"
-      }
+  {
+    "type": "azure-arm",
+    "client_id": "{{ user `azure_client_id` }}",
+    "client_secret": "{{ user `azure_client_secret` }}",
+    "subscription_id": "{{ user `azure_subscription_id` }}",
+    "managed_image_resource_group_name": "{{ user `azure_resource_group` }}",
+    "location": "East US",
+    "image_publisher": "Canonical",
+    "image_offer": "UbuntuServer",
+    "image_sku": "16.04-LTS",
+    "os_type": "Linux",
+    "ssh_username": "packer",
+    "managed_image_name": "{{ user `hashi_product` }}-image",
+    "azure_tags": {
+      "Product": "CVStack"
     }
   ],
   "provisioners": [
