@@ -13,7 +13,7 @@ resource "null_resource" "main" {
 }
 
 resource "azurerm_resource_group" "cvstackgroup" {
-  name     = "cvstack"
+  name     = "${var.resource_group_name}"
   location = "${var.location}"
 
   tags = "${local.common_tags}"
@@ -101,7 +101,7 @@ resource "azurerm_network_interface" "vault_nics" {
   location                  = "${var.location}"
   resource_group_name       = "${azurerm_resource_group.cvstackgroup.name}"
   network_security_group_id = "${azurerm_network_security_group.cvstackpubnsg.id}"
-  count                     = "${var.consul_count}"
+  count                     = "${var.vault_count}"
 
   ip_configuration {
     name                          = "vault-nic${count.index}"
@@ -171,13 +171,67 @@ resource "azurerm_virtual_machine" "cvstackbastion" {
     enabled     = "true"
     storage_uri = "${azurerm_storage_account.cvstacksa.primary_blob_endpoint}"
   }
+
   tags = "${local.common_tags}"
 }
 
+data "template_file" "consul-server-config" {
+  count    = "${var.consul_count}"
+  template = "${file("./consul-server-config.tpl")}"
+
+  vars {
+    node_name      = "consulbox${count.index}"
+    consul_count   = "${var.consul_count}"
+    consul_encrypt = "${var.consul_encrypt}"
+    consul_address = "${element(azurerm_network_interface.consul_nics.*.private_ip_address,count.index)}"
+    consul_nodes   = "${join(",", formatlist("\"%s\"", azurerm_network_interface.consul_nics.*.private_ip_address))}"
+  }
+}
+
+data "template_file" "consul-client-config" {
+  count    = "${var.vault_count}"
+  template = "${file("./consul-client-config.tpl")}"
+
+  vars {
+    node_name      = "vaultbox${count.index}"
+    consul_encrypt = "${var.consul_encrypt}"
+    consul_address = "${element(azurerm_network_interface.vault_nics.*.private_ip_address,count.index)}"
+    consul_nodes   = "${join(",", formatlist("\"%s\"", azurerm_network_interface.consul_nics.*.private_ip_address))}"
+  }
+}
+
+data "template_file" "vault-config" {
+  count    = "${var.vault_count}"
+  template = "${file("./vault-config.tpl")}"
+
+  vars {
+    vault_address = "${element(azurerm_network_interface.vault_nics.*.private_ip_address,count.index)}"
+  }
+}
+
+# local files here can be removed, just to see what the configs will look like
+resource "local_file" "consul-server-config" {
+  count    = "${var.consul_count}"
+  content  = "${element(data.template_file.consul-server-config.*.rendered,count.index)}"
+  filename = "consul-server-config-tf${count.index}.hcl"
+}
+resource "local_file" "consul-client-config" {
+  count    = "${var.vault_count}"
+  content  = "${element(data.template_file.consul-client-config.*.rendered,count.index)}"
+  filename = "consul-client-config-tf${count.index}.hcl"
+}
+resource "local_file" "vault-config" {
+  count    = "${var.vault_count}"
+  content  = "${element(data.template_file.vault-config.*.rendered,count.index)}"
+  filename = "vault-config-tf${count.index}.hcl"
+}
+
 resource "azurerm_virtual_machine" "cvstackconsulnode" {
-  name                = "consulbox${count.index}"
-  location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.cvstackgroup.name}"
+  name                             = "consulbox${count.index}"
+  location                         = "${var.location}"
+  resource_group_name              = "${azurerm_resource_group.cvstackgroup.name}"
+  delete_os_disk_on_termination    = true
+  delete_data_disks_on_termination = true
 
   // Vault and Consul nodes only have NICs on the private subnet
   network_interface_ids = ["${element(azurerm_network_interface.consul_nics.*.id, count.index)}"]
@@ -198,6 +252,13 @@ resource "azurerm_virtual_machine" "cvstackconsulnode" {
   os_profile {
     computer_name  = "cvstack-consul${count.index}"
     admin_username = "cvstackadmin"
+
+    custom_data = <<CONFIG
+#!/bin/bash
+echo '${element(data.template_file.consul-server-config.*.rendered, count.index)}' > /etc/consul.d/consul.hcl
+sudo systemctl enable consul-server.service
+sudo systemctl start consul-server.service
+CONFIG
   }
 
   os_profile_linux_config {
@@ -213,18 +274,21 @@ resource "azurerm_virtual_machine" "cvstackconsulnode" {
     enabled     = "true"
     storage_uri = "${azurerm_storage_account.cvstacksa.primary_blob_endpoint}"
   }
+
   tags = "${local.common_tags}"
 }
 
 resource "azurerm_virtual_machine" "cvstackvaultnode" {
-  name                = "vaultbox${count.index}"
-  location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.cvstackgroup.name}"
+  name                             = "vaultbox${count.index}"
+  location                         = "${var.location}"
+  resource_group_name              = "${azurerm_resource_group.cvstackgroup.name}"
+  delete_os_disk_on_termination    = true
+  delete_data_disks_on_termination = true
 
   // Vault and Consul nodes only have NICs on the private subnet
   network_interface_ids = ["${element(azurerm_network_interface.vault_nics.*.id, count.index)}"]
   vm_size               = "${var.vault_machine_size}"
-  count                 = "${var.consul_count}"
+  count                 = "${var.vault_count}"
 
   storage_os_disk {
     name              = "cvstackvaultdisk${count.index}"
@@ -240,6 +304,16 @@ resource "azurerm_virtual_machine" "cvstackvaultnode" {
   os_profile {
     computer_name  = "cvstack-consul${count.index}"
     admin_username = "cvstackadmin"
+
+    custom_data = <<CONFIG
+#!/bin/bash
+echo '${element(data.template_file.consul-client-config.*.rendered, count.index)}' > /etc/consul.d/consul.hcl
+sudo systemctl enable consul-server.service
+sudo systemctl start consul-server.service
+echo '${element(data.template_file.vault-config.*.rendered, count.index)}' > /etc/vault.d/vault.hcl
+sudo systemctl enable vault.service
+sudo systemctl start vault.service
+CONFIG
   }
 
   os_profile_linux_config {
@@ -259,10 +333,14 @@ resource "azurerm_virtual_machine" "cvstackvaultnode" {
   tags = "${local.common_tags}"
 }
 
-output "jump-public-ip" {
-  value = "${azurerm_public_ip.cvstackpublicip.ip_address}"
+output "consul-private-ip" {
+  value = "${azurerm_network_interface.consul_nics.*.private_ip_address}"
 }
 
-output "private_key" {
-  value = "${tls_private_key.main.private_key_openssh}"
+output "vault-private-ip" {
+  value = "${azurerm_network_interface.vault_nics.*.private_ip_address}"
+}
+
+output "jump-public-ip" {
+  value = "${azurerm_public_ip.cvstackpublicip.ip_address}"
 }
