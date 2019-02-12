@@ -3,13 +3,19 @@ variable "prefix" {
   default     = "hashi"
 }
 
-variable "resource_group_name" {}
+variable "resource_group_name" {
+  default = "cvstack"
+}
 
 locals {
   common_tags = {
     environment = "${var.prefix}-cvstack"
     DoNotDelete = "yes"
   }
+}
+
+variable "consul_encrypt" {
+  description = "The encrypt key deployed to the consul nodes."
 }
 
 variable "location" {

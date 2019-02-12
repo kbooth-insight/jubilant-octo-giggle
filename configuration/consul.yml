@@ -1,62 +1,68 @@
 ---
-- name: consul.yml @common
-  hosts: all
-  become: yes
-  tasks:
-  - name: Common tasks
-    include: common.yml
+# Get Consul
+- name: Get latest consul binary location
+  local_action: command python ./get_enterprise_url.py -p consul
+  become: no
+  register: latest_consul
+- name: Download consul
+  get_url:
+    url: "{{latest_consul.stdout}}"
+    dest: /tmp/consul.zip
 
-  # Get Consul
-  - name: Get latest consul binary location
-    local_action: command python ./get_enterprise_url.py -p consul
-    become: no
-    register: latest_consul
-  - name: Download consul
-    get_url:
-      url: "{{latest_consul.stdout}}"
-      dest: /tmp/consul.zip
+- name: Unzip consul and put in path
+  unarchive:
+    src: /tmp/consul.zip
+    dest: "{{install_dir}}"
+    mode: +x
+    owner: "{{install_owner}}"
+    group: "{{install_group}}"
+    remote_src: yes
+    # force: yes
 
-  - name: Unzip consul and put in path
-    unarchive:
-      src: /tmp/consul.zip
-      dest: "{{install_dir}}"
-      mode: +x
-      owner: "{{install_owner}}"
-      group: "{{install_group}}"
-      remote_src: yes
-      # force: yes
+# debug
+- name: Check if Consul is present
+  command: "{{install_dir}}/consul -v"
+  register: consul_v
+- name: Print
+  debug:
+    var: consul_v.stdout
 
-  # debug
-  - name: Check if Consul is present
-    command: "{{install_dir}}/consul -v"
-    register: consul_v
-  - name: Print
-    debug:
-      var: consul_v.stdout
+# configure systemd and consul config
+- name: Add the user 'consul'
+  user:
+    name: consul
+    comment: Create a unique non privileged system user to run Consul
+    system: yes
+    home: "{{consul_config_dir}}"
+    shell: /bin/false
+- name: Create data directory
+  file:
+    path: "{{consul_data_dir}}"
+    state: directory
+    owner: consul
+    group: consul
+- name: Create config directory
+  file:
+    path: "{{consul_config_dir}}"
+    state: directory
+    owner: consul
+    group: consul
+- name: Create consul server systemd service file 
+  template:
+    src: consul-server.service.j2
+    dest: "{{systemd_dir}}/consul-server.service"
+    owner: consul
+    group: consul
+- name: Create consul config 
+  template:
+    src: consul-server.hcl.j2
+    dest: "{{consul_config_dir}}/consul.hcl"
+    owner: consul
+    group: consul
+    mode: 0640
 
-  # configure systemd and consul config
-  - name: Create config directory
-    file:
-      path: "{{consul_config_dir}}"
-      state: directory
-  - name: Add the user 'consul'
-    user:
-      name: consul
-      comment: Create a unique non privileged system user to run Consul
-      system: yes
-      home: "{{consul_config_dir}}"
-      shell: /bin/false
-  - name: Create consul server systemd service file 
-    template:
-      src: consul-server.service.j2
-      dest: "{{systemd_dir}}/consul-server.service"
-  - name: Create consul config 
-    template:
-      src: consul-server.hcl.j2
-      dest: "{{consul_config_dir}}/consul.hcl"
-      mode: 0640
-  - name: Check on consul server service
-    systemd:
-      name: consul-server.service
-      state: stopped
-      enabled: no
+- name: Check on consul server service
+  systemd:
+    name: consul-server.service
+    state: stopped
+    enabled: no
