@@ -12,7 +12,7 @@ ui = true
 enable_syslog = true
 acl_enforce_version_8 = true
 addresses {
-  https = "${consul_address}"
+  http = "${consul_address}"
 }
 ports {
   https = 8501

@@ -12,3 +12,4 @@ scratch.md
 *.pyc
 *.retry
 .DS_Store
+cluster.plan
