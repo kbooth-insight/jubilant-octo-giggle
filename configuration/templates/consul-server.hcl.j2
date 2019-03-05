@@ -1,4 +1,3 @@
-# Standard Values
 server = true
 data_dir = "{{consul_data_dir}}"
 log_level = "DEBUG"
@@ -9,14 +8,14 @@ ports {
   https = 8501
 }
 
-# Custom Values
-datacenter = "dc1"
-bootstrap_expect = 1
-node_name = "{{inventory_hostname}}"
-bind_addr = "0.0.0.0"
-client_addr = "0.0.0.0"
-encrypt = "{{consul_encrypt_key}}"
-retry_join = ["127.0.0.1"]
-addresses {
-  https = "127.0.0.1"
-}
+# Settings needed at runtime
+# bind_addr = "0.0.0.0"
+# client_addr = "0.0.0.0"
+# datacenter = ""
+# bootstrap_expect = 99
+# node_name = ""
+# encrypt = ""
+# retry_join = ["127.0.0.1"]
+# addresses {
+#   https = "127.0.0.1"
+# }

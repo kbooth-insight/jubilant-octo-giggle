@@ -5,7 +5,7 @@ variable "location" {
 
 variable "prefix" {
   description = "Unique affix to avoid resource duplication."
-  default     = "hashi"
+  default     = "hashistack"
 }
 
 variable "vnet_address_spacing" {
@@ -24,17 +24,13 @@ variable "consul_encrypt" {
   description = "The encrypt key deployed to the consul nodes."
 }
 
-variable "vault_image_id" {
-  description = "The Image ID to use for the base VM for Vault."
-}
-
-variable "consul_image_id" {
-  description = "The Image ID to use for the base VM for Consul."
+variable "os_image_id" {
+  description = "The Image ID to use for the base VM for Consul and Vault."
 }
 
 variable "domain" {
   description = "The domain"
-  default     = "test.com"
+  default     = "consul"
 }
 
 variable "consul_count" {
@@ -74,25 +70,3 @@ locals {
     DoNotDelete = "yes"
   }
 }
-
-output "public-fqdn" {
-  value = "${module.core.public-fqdn}"
-}
-
-output "cluster1-consul-ips" {
-  value = "${module.cluster_1.consul-ips}"
-}
-
-output "cluster1-vault-ips" {
-  value = "${module.cluster_1.vault-ips}"
-}
-
-# output "cluster2-consul-ips" {
-#   value = "${module.cluster_2.consul-ips}"
-# }
-
-
-# output "cluster2-vault-ips" {
-#   value = "${module.cluster_2.vault-ips}"
-# }
-

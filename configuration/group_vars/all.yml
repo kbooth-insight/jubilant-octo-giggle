@@ -7,12 +7,12 @@ install_group: "root"
 systemd_dir: "/etc/systemd/system/"
 
 consul_config_dir: "/etc/consul.d"
+consul_server_config_dir: "{{consul_config_dir}}/server"
+consul_client_config_dir: "{{consul_config_dir}}/client"
 consul_data_dir: "/opt/consul"
 vault_config_dir: "/etc/vault.d"
-ssl_key_dir: "/etc/ssl/private"
-ssl_cert_dir: "/etc/ssl/certs"
 
-
-
-kms_key: "xxxxxxxxx"
-consul_encrypt_key: "Y/+zSbpbSDyTo0nICd5Tpg=="
+#ssl_key_dir: "/etc/ssl/private"
+#ssl_cert_dir: "/etc/ssl/certs"
+# kms_key: "xxxxxxxxx"
+# consul_encrypt_key: "Y/+zSbpbSDyTo0nICd5Tpg=="

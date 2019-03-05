@@ -1,5 +1,8 @@
 ---
-# Get Vault
+# - name: Verify that a key has been passed into the run to fetch enterprise binaries
+#   fail: msg="Please pass in the secret 'enterprise_s3_key' to fetch enterprise binaries"
+#   when: enterprise_s3_key is not defined
+
 - name: Get latest vault binary location
   local_action: command python ./get_enterprise_url.py -p vault
   become: no
@@ -18,39 +21,12 @@
     remote_src: yes
     # force: yes
 
-# Get Consul
-- name: Get latest consul binary location
-  local_action: command python ./get_enterprise_url.py -p consul
-  become: no
-  register: latest_consul
-- name: Download consul
-  get_url:
-    url: "{{latest_consul.stdout}}"
-    dest: /tmp/consul.zip
-
-- name: Unzip consul and put in path
-  unarchive:
-    src: /tmp/consul.zip
-    dest: "{{install_dir}}"
-    mode: +x
-    owner: "{{install_owner}}"
-    group: "{{install_group}}"
-    remote_src: yes
-    # force: yes
-
-# debug
-- name: Check if vault is present
+- name: Check if Vault is present before proceeding
   command: "{{install_dir}}/vault -v"
   register: vault_v
-- name: Print
+- name: Print Vault version
   debug:
     var: vault_v.stdout
-- name: Check if Consul is present
-  command: "{{install_dir}}/consul -v"
-  register: consul_v
-- name: Print
-  debug:
-    var: consul_v.stdout
 
 # configure systemd and vault config
 - name: Add the user 'vault'
@@ -66,21 +42,23 @@
     state: directory
     owner: vault
     group: vault
-- name: Create vault server systemd service file 
+
+- name: Create Vault server systemd service file 
   template:
     src: vault.service.j2
     dest: "{{systemd_dir}}/vault.service"
     owner: vault
     group: vault
-- name: Create vault config 
-  template:
-    src: vault.hcl.j2
-    dest: "{{vault_config_dir}}/vault.hcl"
-    owner: vault
-    group: vault
-    mode: 0640
+# Do not create the vault config in the image
+# - name: Create Vault config 
+#   template:
+#     src: vault.hcl.j2
+#     dest: "{{vault_config_dir}}/vault.hcl"
+#     owner: vault
+#     group: vault
+#     mode: 0640
 
-- name: Check on vault server service
+- name: Check on Vault server service
   systemd:
     name: vault.service
     state: stopped

@@ -13,3 +13,4 @@ scratch.md
 *.retry
 .DS_Store
 cluster.plan
+live_config/*

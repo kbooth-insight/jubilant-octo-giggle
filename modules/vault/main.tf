@@ -50,23 +50,13 @@ resource "azurerm_virtual_machine" "module" {
 
     custom_data = <<CONFIG
 #!/bin/bash
-echo '${element(data.template_file.consul.*.rendered, count.index)}' > /etc/consul.d/consul.hcl
-sudo systemctl enable consul-server.service
-sudo systemctl start consul-server.service
+echo '${element(data.template_file.consul.*.rendered, count.index)}' > /etc/consul.d/client/consul.hcl
+sudo systemctl enable consul-client.service
+sudo systemctl start consul-client.service
 echo '${element(data.template_file.vault.*.rendered, count.index)}' > /etc/vault.d/vault.hcl
 sudo systemctl enable vault.service
 sudo systemctl start vault.service
-cp /var/lib/waagent/${element(azurerm_key_vault_certificate.module.*.thumbprint, count.index)}.prv /home/${var.username}/server.key
-cp /var/lib/waagent/${element(azurerm_key_vault_certificate.module.*.thumbprint, count.index)}.crt /home/${var.username}/server.crt
 CONFIG
-  }
-
-  os_profile_secrets {
-    source_vault_id = "${var.vault_id}"
-
-    vault_certificates {
-      certificate_url = "${element(azurerm_key_vault_certificate.module.*.secret_id, count.index)}"
-    }
   }
 
   os_profile_linux_config {
@@ -87,9 +77,12 @@ data "template_file" "consul" {
 
   vars {
     node_name      = "${local.module_name}vm${count.index}"
+    vault_address  = "${element(azurerm_network_interface.module.*.private_ip_address,count.index)}"
     consul_encrypt = "${var.consul_encrypt}"
-    consul_address = "${element(azurerm_network_interface.module.*.private_ip_address,count.index)}"
     consul_nodes   = "${var.consul_nodes}"
+    data_dir       = "/opt/consul"
+    domain         = "${var.domain}"
+    datacenter     = "${var.datacenter}"
   }
 }
 
@@ -121,61 +114,7 @@ resource "local_file" "vault" {
   filename = "./.terraform/${local.module_name}-vault-config-tf${count.index}.hcl"
 }
 
-resource "azurerm_key_vault_certificate" "module" {
-  name         = "${local.module_name}vm${count.index}cert"
-  key_vault_id = "${var.vault_id}"
-  count        = "${var.count}"
-
-  certificate_policy {
-    issuer_parameters {
-      name = "Self"
-    }
-
-    key_properties {
-      exportable = true
-      key_size   = 2048
-      key_type   = "RSA"
-      reuse_key  = true
-    }
-
-    lifetime_action {
-      action {
-        action_type = "AutoRenew"
-      }
-
-      trigger {
-        days_before_expiry = 30
-      }
-    }
-
-    secret_properties {
-      content_type = "application/x-pkcs12"
-    }
-
-    x509_certificate_properties {
-      # Server Authentication = 1.3.6.1.5.5.7.3.1
-      # Client Authentication = 1.3.6.1.5.5.7.3.2
-      extended_key_usage = ["1.3.6.1.5.5.7.3.1"]
-
-      key_usage = [
-        "cRLSign",
-        "dataEncipherment",
-        "digitalSignature",
-        "keyAgreement",
-        "keyCertSign",
-        "keyEncipherment",
-      ]
-
-      subject_alternative_names {
-        dns_names = ["${local.module_name}vm${count.index}.${var.domain}"]
-      }
-
-      subject            = "CN=${var.domain}"
-      validity_in_months = 12
-    }
-  }
-}
-
+# Auto unseal key
 resource "azurerm_key_vault_key" "module" {
   key_vault_id = "${var.vault_id}"
   name         = "${local.module_name}-vault-unseal"

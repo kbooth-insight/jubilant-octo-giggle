@@ -1,19 +1,11 @@
 ---
-- name: "Install Hashicorp Product: {{product}}"
+- name: Install Hashicorp Consul and Vault
   hosts: all
   become: yes
   tasks:
-  # Common
   - name: Common tasks
     include: common.yml
-  # Consul
-  - name: Install Consul Server
-    include: consul.yml consul_type=server
-    when: product == 'consul'
-  # Vault
-  - name: Install Consul Client
-    include: consul.yml consul_type=client
-    when: product == 'vault'
+  - name: Install Consul Server/Client
+    include: consul.yml
   - name: Install Vault
     include: vault.yml
-    when: product == 'vault'
