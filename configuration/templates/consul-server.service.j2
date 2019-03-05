@@ -13,7 +13,7 @@ Description="HashiCorp Consul Server - A service mesh solution"
 Documentation=https://www.consul.io/
 Requires=network-online.target
 After=network-online.target
-ConditionFileNotEmpty={{consul_config_dir}}/consul.hcl
+ConditionDirectoryNotEmpty={{consul_server_config_dir}}
 
 [Service]
 User=consul
@@ -23,7 +23,7 @@ PermissionsStartOnly=true
 ExecStartPre=-/bin/mkdir -p /var/run/consul
 ExecStartPre=/bin/chown -R consul:consul /var/run/consul
 ExecStart=/usr/local/bin/consul agent \
-    -config-file={{consul_config_dir}}/consul.hcl \
+    -config-dir={{consul_server_config_dir}} \
     -pid-file=/var/run/consul/consul.pid
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process

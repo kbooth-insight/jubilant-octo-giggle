@@ -37,7 +37,12 @@ variable "vault_id" {
 }
 
 variable "domain" {
-  description = "Domain to create self-signed certs for."
+  description = "Domain."
+}
+
+variable "datacenter" {
+  default     = "dc1"
+  description = "Datacenter to register to."
 }
 
 variable "count" {

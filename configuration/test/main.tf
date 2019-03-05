@@ -1,6 +1,8 @@
+variable "location" {}
+
 resource "azurerm_resource_group" "module" {
   name     = "test-hahistack-rg"
-  location = "centralus"
+  location = "${var.location}"
 }
 
 resource "tls_private_key" "ssh" {
@@ -43,11 +45,11 @@ resource "random_pet" "module" {
 resource "azurerm_public_ip" "module" {
   name = "testpip"
 
-  location                     = "${azurerm_resource_group.module.location}"
-  resource_group_name          = "${azurerm_resource_group.module.name}"
-  domain_name_label            = "${random_pet.module.id}"
-  public_ip_address_allocation = "Dynamic"
-  idle_timeout_in_minutes      = 30
+  location                = "${azurerm_resource_group.module.location}"
+  resource_group_name     = "${azurerm_resource_group.module.name}"
+  domain_name_label       = "${random_pet.module.id}"
+  allocation_method       = "Dynamic"
+  idle_timeout_in_minutes = 30
 }
 
 resource "azurerm_network_interface" "consul" {

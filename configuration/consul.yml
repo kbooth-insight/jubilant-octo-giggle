@@ -1,5 +1,8 @@
 ---
-# Get Consul
+# - name: Verify that a key has been passed into the run to fetch enterprise binaries
+#   fail: msg="Please pass in the secret 'enterprise_s3_key' to fetch enterprise binaries"
+#   when: enterprise_s3_key is not defined
+
 - name: Get latest consul binary location
   local_action: command python ./get_enterprise_url.py -p consul
   become: no
@@ -8,7 +11,6 @@
   get_url:
     url: "{{latest_consul.stdout}}"
     dest: /tmp/consul.zip
-
 - name: Unzip consul and put in path
   unarchive:
     src: /tmp/consul.zip
@@ -19,11 +21,10 @@
     remote_src: yes
     # force: yes
 
-# debug
-- name: Check if Consul is present
+- name: Check if Consul is present before proceeding
   command: "{{install_dir}}/consul -v"
   register: consul_v
-- name: Print
+- name: Print Consul version
   debug:
     var: consul_v.stdout
 
@@ -35,34 +36,55 @@
     system: yes
     home: "{{consul_config_dir}}"
     shell: /bin/false
-- name: Create data directory
+- name: Create data and config directories
   file:
-    path: "{{consul_data_dir}}"
+    path: "{{item}}"
     state: directory
     owner: consul
     group: consul
-- name: Create config directory
-  file:
-    path: "{{consul_config_dir}}"
-    state: directory
-    owner: consul
-    group: consul
-- name: Create consul server systemd service file 
+  with_items:
+  - [ "{{consul_data_dir}}",
+      "{{consul_config_dir}}",
+      "{{consul_server_config_dir}}",
+      "{{consul_client_config_dir}}"
+    ]
+
+# Consul Server
+- name: Create Consul 'server' systemd service file 
   template:
     src: consul-server.service.j2
     dest: "{{systemd_dir}}/consul-server.service"
     owner: consul
     group: consul
-- name: Create consul config 
+- name: Create Consul 'server' config 
   template:
     src: consul-server.hcl.j2
-    dest: "{{consul_config_dir}}/consul.hcl"
+    dest: "{{consul_server_config_dir}}/__consul.hcl"
     owner: consul
     group: consul
     mode: 0640
-
-- name: Check on consul server service
+- name: Check on Consul 'server' service
   systemd:
     name: consul-server.service
+    state: stopped
+    enabled: no
+
+# Consul Client
+- name: Create Consul 'client' systemd service file 
+  template:
+    src: consul-client.service.j2
+    dest: "{{systemd_dir}}/consul-client.service"
+    owner: consul
+    group: consul
+- name: Create Consul 'client' config 
+  template:
+    src: consul-client.hcl.j2
+    dest: "{{consul_client_config_dir}}/__consul.hcl"
+    owner: consul
+    group: consul
+    mode: 0640
+- name: Check on Consul 'client' service
+  systemd:
+    name: consul-client.service
     state: stopped
     enabled: no

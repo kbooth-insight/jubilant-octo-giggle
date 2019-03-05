@@ -26,18 +26,16 @@
   ufw:
     state: disabled
 
-# TLS
-- name: Create key directory
-  file:
-    path: "{{ssl_key_dir}}"
-    state: directory
-    mode: 0755
-- name: Create cert directory
-  file:
-    path: "{{ssl_cert_dir}}"
-    state: directory
-
-
+# # TLS
+# - name: Create key directory
+#   file:
+#     path: "{{ssl_key_dir}}"
+#     state: directory
+#     mode: 0755
+# - name: Create cert directory
+#   file:
+#     path: "{{ssl_cert_dir}}"
+#     state: directory
 
 # - name: Copy ssl server.key
 #   copy:
