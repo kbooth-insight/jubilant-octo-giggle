@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "cluster1" {
 }
 
 module "consul_cluster1" {
-  source                    = "./modules/consul"
+  source                    = "./modules/consul_vmss"
   name                      = "consulcl1"
   resource_group_name       = "${azurerm_resource_group.cluster1.name}"
   location                  = "${azurerm_resource_group.cluster1.location}"
@@ -20,10 +20,13 @@ module "consul_cluster1" {
   domain         = "${var.domain}"
   count          = "${var.consul_count}"
   consul_encrypt = "${var.consul_encrypt}"
+
+  spn_client_id     = "${azurerm_azuread_service_principal.main.application_id}"
+  spn_client_secret = "${random_string.password.result}"
 }
 
 module "vault_cluster1" {
-  source                    = "./modules/vault"
+  source                    = "./modules/vault_vmss"
   name                      = "vaultcl1"
   resource_group_name       = "${azurerm_resource_group.cluster1.name}"
   location                  = "${azurerm_resource_group.cluster1.location}"
@@ -39,15 +42,10 @@ module "vault_cluster1" {
   domain                 = "${var.domain}"
 
   # pass in consul cluster addresses
-  count          = "${var.vault_count}"
-  consul_encrypt = "${var.consul_encrypt}"
-  consul_nodes   = "${join(",", formatlist("\"%s\"", module.consul_cluster1.private-ips))}"
-}
+  count            = "${var.vault_count}"
+  consul_encrypt   = "${var.consul_encrypt}"
+  consul_vmss_name = "${module.consul_cluster1.vmss_name}"
 
-output "consul_cluster1-ips" {
-  value = "${module.consul_cluster1.private-ips}"
-}
-
-output "vault-cluster1-ips" {
-  value = "${module.vault_cluster1.private-ips}"
+  spn_client_id     = "${azurerm_azuread_service_principal.main.application_id}"
+  spn_client_secret = "${random_string.password.result}"
 }

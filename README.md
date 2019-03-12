@@ -103,3 +103,32 @@ HA Cluster               https://10.0.1.8:8201
 HA Mode                  active
 Last WAL                 16
 ```
+
+# Terraform root Module
+
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|:----:|:-----:|:-----:|
+| consul\_count | The number of Consul nodes to deploy. | string | `"5"` | no |
+| consul\_encrypt | The encrypt key deployed to the consul nodes. | string | n/a | yes |
+| consul\_machine\_size | The machine size to use for Consul. | string | `"Standard_DS1_v2"` | no |
+| domain | The domain | string | `"consul"` | no |
+| key\_vault\_object\_ids | The additonal object ids to add to the keyvault (Optional) | list | `[]` | no |
+| location | The Azure location to which to deploy. | string | `"eastus"` | no |
+| os\_image\_id | The Image ID to use for the base VM for Consul and Vault. | string | n/a | yes |
+| prefix | Unique affix to avoid resource duplication. | string | `"hashistack"` | no |
+| subnet\_address\_prefixes | List of Subnet Address Prefixes. Each prefix will result in a new Subnet | list | `[ "10.0.1.0/24", "10.0.2.0/24" ]` | no |
+| vault\_count | The number of Vault nodes to deploy. | string | `"3"` | no |
+| vault\_machine\_size | The machine size to use for Vault. | string | `"Standard_DS1_v2"` | no |
+| vault\_unseal\_client\_id | Client secret for autounseal. | string | n/a | yes |
+| vnet\_address\_spacing | List of Address Spaces for the Virtual Network | list | `[ "10.0.0.0/16" ]` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| public-fqdn |  |
+
+<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
