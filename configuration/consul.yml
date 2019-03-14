@@ -1,25 +1,34 @@
 ---
-# - name: Verify that a key has been passed into the run to fetch enterprise binaries
-#   fail: msg="Please pass in the secret 'enterprise_s3_key' to fetch enterprise binaries"
-#   when: enterprise_s3_key is not defined
-
-- name: Get latest consul binary location
-  local_action: command python ./get_enterprise_url.py -p consul
-  become: no
-  register: latest_consul
-- name: Download consul
-  get_url:
-    url: "{{latest_consul.stdout}}"
-    dest: /tmp/consul.zip
-- name: Unzip consul and put in path
-  unarchive:
-    src: /tmp/consul.zip
-    dest: "{{install_dir}}"
-    mode: +x
-    owner: "{{install_owner}}"
-    group: "{{install_group}}"
-    remote_src: yes
-    # force: yes
+- name: Install Consul Binary - Local
+  block:
+    - name: Copy local binary to remote
+      copy:
+        src: "{{local_enterprise_binary_dir}}/consul"
+        dest: "{{install_dir}}"
+        owner: "{{install_owner}}"
+        group: "{{install_group}}"
+        mode: +x
+  when: local_binaries
+- name: Install Consul Binary - Remote
+  block:
+    - name: Get latest consul binary location
+      local_action: command python ./get_enterprise_url.py -p consul
+      become: no
+      register: latest_consul
+    - name: Download consul
+      get_url:
+        url: "{{latest_consul.stdout}}"
+        dest: /tmp/consul.zip
+    - name: Unzip consul and put in path
+      unarchive:
+        src: /tmp/consul.zip
+        dest: "{{install_dir}}"
+        mode: +x
+        owner: "{{install_owner}}"
+        group: "{{install_group}}"
+        remote_src: yes
+        # force: yes
+  when: not local_binaries
 
 - name: Check if Consul is present before proceeding
   command: "{{install_dir}}/consul -v"

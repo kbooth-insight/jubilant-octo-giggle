@@ -20,11 +20,28 @@
     - curl
     - tmux
     - python-pip
+    - apt-transport-https
+    - lsb-release
+    - software-properties-common
+    - dirmngr
+
+# Install Azure CLI
+- name: Get packages repo
+  shell: echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/azure-cli.list
+- name: Add an apt key for microsoft packages
+  command: apt-key --keyring /etc/apt/trusted.gpg.d/Microsoft.gpg adv --keyserver packages.microsoft.com --recv-keys BC528686B50D79E339D3721CEB3E94ADBE1229CF
+- name: Install Azure CLI
+  apt:
+    name: azure-cli
+    update_cache: true
 
 # Firewall
 - name: Disable UFW
   ufw:
     state: disabled
+
+
+
 
 # # TLS
 # - name: Create key directory

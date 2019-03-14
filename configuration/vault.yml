@@ -1,25 +1,34 @@
 ---
-# - name: Verify that a key has been passed into the run to fetch enterprise binaries
-#   fail: msg="Please pass in the secret 'enterprise_s3_key' to fetch enterprise binaries"
-#   when: enterprise_s3_key is not defined
-
-- name: Get latest vault binary location
-  local_action: command python ./get_enterprise_url.py -p vault
-  become: no
-  register: latest_vault
-- name: Download vault
-  get_url:
-    url: "{{latest_vault.stdout}}"
-    dest: /tmp/vault.zip
-- name: Unzip vault and put in path
-  unarchive:
-    src: /tmp/vault.zip
-    dest: "{{install_dir}}"
-    mode: +x      
-    owner: "{{install_owner}}"
-    group: "{{install_group}}"
-    remote_src: yes
-    # force: yes
+- name: Install Vault Binary - Local
+  block:
+    - name: Copy local binary to remote
+      copy:
+        src: "{{local_enterprise_binary_dir}}/vault"
+        dest: "{{install_dir}}"
+        owner: "{{install_owner}}"
+        group: "{{install_group}}"
+        mode: +x
+  when: local_binaries
+- name: Install Vault Binary - Remote
+  block:
+    - name: Get latest vault binary location
+      local_action: command python ./get_enterprise_url.py -p vault
+      become: no
+      register: latest_vault
+    - name: Download vault
+      get_url:
+        url: "{{latest_vault.stdout}}"
+        dest: /tmp/vault.zip
+    - name: Unzip vault and put in path
+      unarchive:
+        src: /tmp/vault.zip
+        dest: "{{install_dir}}"
+        mode: +x      
+        owner: "{{install_owner}}"
+        group: "{{install_group}}"
+        remote_src: yes
+        # force: yes
+  when: not local_binaries
 
 - name: Check if Vault is present before proceeding
   command: "{{install_dir}}/vault -v"
