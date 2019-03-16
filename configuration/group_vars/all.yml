@@ -13,4 +13,4 @@ consul_data_dir: "/opt/consul"
 vault_config_dir: "/etc/vault.d"
 
 local_binaries: true
-local_enterprise_binary_dir: "/usr/local/hashi-enterprise"
+local_enterprise_binary_dir: "files/hashi-enterprise"

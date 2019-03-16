@@ -14,3 +14,6 @@ scratch.md
 .DS_Store
 cluster.plan
 live_config/*
+
+configuration/files/hashi-enterprise/*
+!configuration/files/hashi-enterprise/.gitkeep
