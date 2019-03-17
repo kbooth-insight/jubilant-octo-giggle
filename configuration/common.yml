@@ -34,6 +34,14 @@
   apt:
     name: azure-cli
     update_cache: true
+# Move datadisk mount script over to image
+- name: Copy prepare_vm_disks.sh to image
+  copy:
+    src: "prepare_vm_disks.sh"
+    dest: "{{supplemental_files}}"
+    owner: "{{install_owner}}"
+    group: "{{install_group}}"
+    mode: +x
 
 # Firewall
 - name: Disable UFW

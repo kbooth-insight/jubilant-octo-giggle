@@ -8,5 +8,7 @@ sudo cat << EOF > /etc/consul.d/server/consul.hcl
 ${consul_config_contents}
 EOF
 
+sudo /opt/hashi/prepare_vm_disk.sh
+
 sudo systemctl enable consul-server.service
 sudo systemctl start consul-server.service

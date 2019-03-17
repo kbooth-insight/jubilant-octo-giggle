@@ -13,6 +13,8 @@ sudo cat << EOF > /etc/vault.d/vault.hcl
 ${vault_config_contents}
 EOF
 
+sudo /opt/hashi/prepare_vm_disk.sh
+
 sudo systemctl enable consul-client.service
 sudo systemctl start consul-client.service
 

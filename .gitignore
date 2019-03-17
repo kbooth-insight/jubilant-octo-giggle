@@ -14,6 +14,7 @@ scratch.md
 .DS_Store
 cluster.plan
 live_config/*
+**/.envrc
 
 configuration/files/hashi-enterprise/*
 !configuration/files/hashi-enterprise/.gitkeep

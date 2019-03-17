@@ -5,11 +5,12 @@ install_dir: "/usr/local/bin"
 install_owner: "root"
 install_group: "root"
 systemd_dir: "/etc/systemd/system/"
+supplemental_files: "/opt/hashi"
 
 consul_config_dir: "/etc/consul.d"
 consul_server_config_dir: "{{consul_config_dir}}/server"
 consul_client_config_dir: "{{consul_config_dir}}/client"
-consul_data_dir: "/opt/consul"
+consul_data_dir: "/datadisk/consul1"
 vault_config_dir: "/etc/vault.d"
 
 local_binaries: true

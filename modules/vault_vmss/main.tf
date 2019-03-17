@@ -45,6 +45,13 @@ resource "azurerm_virtual_machine_scale_set" "module" {
     id = "${var.os_image_id}"
   }
 
+  storage_profile_data_disk {
+    lun           = 0
+    caching       = "ReadWrite"
+    create_option = "Empty"
+    disk_size_gb  = 10
+  }
+
   storage_profile_os_disk {
     name              = ""
     caching           = "ReadWrite"
